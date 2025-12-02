@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>坦派斯特國中段考衝刺班 (V9 Perfect Notes)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+    <!-- MathJax Configuration -->
+    <script>
+    MathJax = {
+      tex: { 
+        inlineMath: [['$', '$'], ['\\(', '\\)']], 
+        displayMath: [['$$', '$$']] 
+      },
+      svg: { fontCache: 'global' }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #e0f2fe; 
+            background-image: radial-gradient(#bae6fd 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f0f9ff; }
+        ::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0ea5e9; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+        
+        .note-card { transition: all 0.2s ease; }
+        .note-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+        .draggable-item { cursor: grab; user-select: none; }
+        .draggable-item:active { cursor: grabbing; }
+        .drop-zone { transition: all 0.3s; }
+        .drop-zone.drag-over { background-color: #d1fae5; border-color: #10b981; transform: scale(1.02); }
+
+        /* Prevent MathJax from breaking lines inline */
+        mjx-container[jax="CHTML"][display="true"] { margin: 0.2em 0 !important; display: inline-block !important; }
+        
+        /* Highlighting */
+        .highlight { background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(254, 240, 138, 0.6) 100%); padding: 0 4px; font-weight: bold; color: #b45309; }
+        .keyword { color: #0369a1; font-weight: bold; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Top Bar -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-sky-200 z-20 flex-none shadow-sm h-16">
+        <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-sky-400 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-sky-200 animate-pulse">
+                    <i class="fa-solid fa-face-smile"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black text-slate-700 tracking-tight">坦派斯特・建國衝刺班</h1>
+                    <p class="text-xs text-sky-600 font-bold">V9 完美筆記版</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 md:gap-4 bg-slate-100/80 px-4 py-2 rounded-full border border-slate-200 shadow-inner overflow-x-auto">
+                <div class="flex items-center gap-2 shrink-0" title="魔素">
+                    <i class="fa-solid fa-bolt text-yellow-500"></i>
+                    <span id="res-magic" class="font-mono font-bold text-slate-700">0</span>
+                </div>
+                <div class="w-px h-4 bg-slate-300 shrink-0"></div>
+                <div class="flex items-center gap-2 shrink-0" title="草藥">
+                    <i class="fa-solid fa-leaf text-green-500"></i>
+                    <span id="res-herb" class="font-mono font-bold text-slate-700">0</span>
+                </div>
+                <div class="w-px h-4 bg-slate-300 shrink-0"></div>
+                <div class="flex items-center gap-2 shrink-0" title="等級">
+                    <i class="fa-solid fa-chess-rook text-sky-600"></i>
+                    <span id="res-level" class="font-bold text-slate-700">Lv.1 村莊</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="shareApp()" class="hidden md:flex bg-slate-200 text-slate-600 px-4 py-2 rounded-full text-sm font-bold hover:bg-slate-300 transition">
+                    <i class="fa-solid fa-share-nodes mr-2"></i> 分享
+                </button>
+                <button onclick="openQuizSelector()" class="hidden md:flex bg-gradient-to-r from-sky-500 to-blue-600 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg shadow-sky-200 hover:scale-105 transition">
+                    <i class="fa-solid fa-dungeon mr-2"></i> 討伐任務
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Sidebar -->
+        <nav class="w-64 bg-white/80 border-r border-sky-100 flex-none hidden md:flex flex-col backdrop-blur">
+            <div class="p-4 space-y-1 overflow-y-auto flex-1 custom-scrollbar">
+                <div class="mb-6 px-2 text-center">
+                    <div class="w-full h-32 bg-sky-100 rounded-xl mb-2 flex items-center justify-center text-sky-300 text-6xl shadow-inner">
+                        <i class="fa-solid fa-dragon"></i>
+                    </div>
+                    <div class="text-xs text-slate-400 font-bold">"這份筆記是維爾德拉大人也認可的！<br>全力以赴吧！"</div>
+                </div>
+
+                <p class="px-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">管理與建設</p>
+                <button onclick="switchView('city')" id="nav-city" class="nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 bg-sky-50 text-sky-700 font-bold border border-sky-100 mb-2 transition-all">
+                    <i class="fa-solid fa-city w-6 text-center"></i> 城邦概況 City
+                </button>
+
+                <p class="px-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-4">學科修煉</p>
+                <div id="sidebar-subjects" class="space-y-1"></div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto relative scroll-smooth p-4 md:p-8" id="main-container">
+            <!-- Dynamic Content -->
+        </main>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="fixed inset-0 z-50 hidden transition-opacity duration-300" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeQuizModal()"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto pointer-events-none">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="pointer-events-auto relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-3xl border-4 border-sky-200 flex flex-col max-h-[90vh]">
+                    
+                    <div class="bg-gradient-to-r from-sky-500 to-blue-600 px-6 py-4 flex justify-between items-center shrink-0">
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-khanda"></i>
+                            <span id="quiz-modal-title">魔物討伐戰</span>
+                        </h3>
+                        <div class="flex items-center gap-3">
+                            <div class="bg-black/20 px-3 py-1 rounded-full text-white text-xs font-mono">
+                                <i class="fa-solid fa-heart text-red-400 mr-1"></i>HP: <span id="quiz-hp">3</span>
+                            </div>
+                            <button onclick="closeQuizModal()" class="text-white/80 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-6 overflow-y-auto custom-scrollbar flex-1 bg-sky-50/30">
+                        <!-- Selector -->
+                        <div id="quiz-selector" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                        
+                        <!-- Question -->
+                        <div id="quiz-question-view" class="hidden max-w-2xl mx-auto w-full">
+                            <div class="w-full bg-slate-200 rounded-full h-3 mb-6 overflow-hidden border border-slate-300">
+                                <div id="quiz-progress-bar" class="bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div id="question-card" class="bg-white p-6 rounded-2xl shadow-lg border border-sky-100 min-h-[300px] flex flex-col justify-center"></div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="quiz-results-view" class="hidden text-center py-10">
+                            <div id="result-icon-container" class="mb-6"></div>
+                            <h2 class="text-3xl font-black text-slate-800 mb-2">討伐結束！</h2>
+                            <p id="result-msg" class="text-slate-500 mb-8">正在結算戰利品...</p>
+                            
+                            <div class="flex justify-center gap-4 mb-8">
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-sky-100 min-w-[100px]">
+                                    <div class="text-xs text-slate-400 font-bold uppercase">魔素 Get</div>
+                                    <div id="reward-magic" class="text-2xl font-black text-yellow-500">+0</div>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-sky-100 min-w-[100px]">
+                                    <div class="text-xs text-slate-400 font-bold uppercase">草藥 Get</div>
+                                    <div id="reward-herb" class="text-2xl font-black text-green-500">+0</div>
+                                </div>
+                            </div>
+
+                            <button onclick="closeQuizModal()" class="bg-sky-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-sky-700 transition shadow-lg">返回城邦</button>
+                        </div>
+                    </div>
+
+                    <div id="quiz-footer" class="bg-white px-6 py-4 border-t border-slate-100 flex justify-between items-center shrink-0 hidden">
+                        <button onclick="useHerb()" id="btn-use-herb" class="text-green-600 font-bold text-sm hover:bg-green-50 px-3 py-1 rounded transition flex items-center gap-1">
+                            <i class="fa-solid fa-leaf"></i> 使用草藥提示 (-1)
+                        </button>
+                        <button id="btn-next" onclick="nextQuestion()" class="bg-sky-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-sky-500 transition shadow-md opacity-50 cursor-not-allowed" disabled>
+                            下一題 Next <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- GAME STATE ---
+        const gameState = {
+            magicules: 200,
+            herbs: 5,
+            level: 1,
+            buildings: { 'village': true, 'blacksmith': false, 'school': false, 'arena': false, 'castle': false }
+        };
+
+        const buildingsInfo = {
+            'village': { name: "哥布林村", cost: 0, icon: "campground", desc: "冒險的起點" },
+            'blacksmith': { name: "凱金鐵匠鋪", cost: 500, icon: "hammer", desc: "解鎖數學與物理工具" },
+            'school': { name: "自由學園", cost: 1200, icon: "school", desc: "提升知識獲取速度" },
+            'arena': { name: "武鬥大會", cost: 2500, icon: "trophy", desc: "挑戰高難度測驗" },
+            'castle': { name: "魔王城", cost: 5000, icon: "crown", desc: "統治鳩拉大森林" }
+        };
+
+        // --- CONTENT DATA (V9 - Detailed Notes) ---
+        const studyData = {
+            math: { id: 'math', title: "數學 Mathematics", icon: "calculator", color: "indigo", summary: "互動工具：史萊姆指數分裂" },
+            biology: { id: 'biology', title: "生物 Biology", icon: "dna", color: "emerald", summary: "互動工具：消化道拖曳" },
+            geography: { id: 'geography', title: "地理 Geography", icon: "earth-asia", color: "sky", summary: "互動工具：地圖拼圖" },
+            history: { id: 'history', title: "歷史 History", icon: "landmark", color: "amber", summary: "重點：史前文化、大航海時代" },
+            civics: { id: 'civics', title: "公民 Civics", icon: "scale-balanced", color: "rose", summary: "重點：社會規範、團體分類" },
+            chinese: { id: 'chinese', title: "國文 Chinese", icon: "pen-nib", color: "violet", summary: "範圍：L4-6, 語常, 自學" },
+            english: { id: 'english', title: "英文 English", icon: "language", color: "blue", summary: "範圍：複數名詞, V-ing 變化" }
+        };
+
+        const notesData = {
+            math: [
+                { 
+                    title: "1. 指數記法與運算", 
+                    details: [
+                        "<strong>指數定義</strong>：\\( a^n \\) 代表 \\( n \\) 個 \\( a \\) 相乘。\\( a \\) 為底數，\\( n \\) 為指數。",
+                        "<strong>指數律 (Index Laws) - 必背</strong>：",
+                        "1. \\( a^m \\times a^n = a^{m+n} \\) (底數相同，相乘時指數相加)",
+                        "2. \\( (a^m)^n = a^{m \\times n} \\) (次方再次方，指數相乘)",
+                        "3. \\( (a \\times b)^n = a^n \\times b^n \\) (積的次方，個別次方)",
+                        "4. \\( a^m \\div a^n = a^{m-n} \\) (底數相同，相除時指數相減)",
+                        "5. \\( a^0 = 1 \\) (任何非零數的 0 次方皆為 1)"
+                    ]
+                },
+                { 
+                    title: "2. 科學記號 (Scientific Notation)", 
+                    details: [
+                        "<strong>定義</strong>：將極大或極小的數寫成 \\( a \\times 10^n \\) 的形式。",
+                        "<strong>限制條件</strong>：\\( 1 \\le |a| < 10 \\) (\\( a \\) 必須大於等於 1 且小於 10)，\\( n \\) 為整數。",
+                        "<strong>位數判斷法</strong>：",
+                        "- 若 \\( n > 0 \\)，該數為 \\( n+1 \\) 位數。 (例：\\( 10^3 \\) 是 4 位數)",
+                        "- 若 \\( n < 0 \\)，小數點後第 \\( |n| \\) 位開始出現不為 0 的數字。"
+                    ]
+                }
+            ],
+            biology: [
+                { 
+                    title: "1. 酵素 (Enzymes) - 3-2", 
+                    details: [
+                        "<strong>成分與功能</strong>：主成分為<span class='highlight'>蛋白質</span>。作為生物體內的催化劑，加速代謝反應。",
+                        "<strong>專一性 (Specificity)</strong>：一種酵素只能催化一種特定的反應（如鎖與鑰匙）。",
+                        "<strong>影響活性的因素</strong>：",
+                        "- <span class='keyword'>溫度</span>：低溫活性低(可恢復)，高溫會破壞結構(變性/不可逆)。",
+                        "- <span class='keyword'>酸鹼性(pH)</span>：每種酵素有最適 pH 值。胃蛋白酶(酸性)，唾液澱粉酶(中性)。"
+                    ]
+                },
+                { 
+                    title: "2. 植物的運輸構造", 
+                    details: [
+                        "<strong>木質部 (Xylem)</strong>：位於維管束<span class='text-emerald-600 font-bold'>內側</span>。運輸<strong>水分與礦物質</strong>。方向單一由下往上 (依靠蒸散作用拉力)。",
+                        "<strong>韌皮部 (Phloem)</strong>：位於維管束<span class='text-emerald-600 font-bold'>外側</span>。運輸<strong>光合作用產生的養分(糖)</strong>。方向可雙向 (源至匯)。",
+                        "<strong>形成層</strong>：位於兩者之間，向內增生木質部，向外增生韌皮部。春夏生長快(色淺/寬)，秋冬慢(色深/窄)，形成<strong>年輪</strong>。"
+                    ]
+                },
+                { 
+                    title: "3. 人體的消化系統", 
+                    details: [
+                        "<strong>消化管路徑</strong>：口 &rarr; 咽 &rarr; 食道 &rarr; 胃 &rarr; 小腸 &rarr; 大腸 &rarr; 肛門。",
+                        "<strong>胃</strong>：強酸環境 (HCl)，胃蛋白酶初步分解蛋白質。",
+                        "<strong>小腸</strong>：主要的消化與吸收場所。絨毛增加吸收面積。膽汁、胰液在此注入。",
+                        "<strong>消化腺</strong>：",
+                        "- <strong>肝臟</strong>：人體最大消化腺，分泌<span class='highlight'>膽汁</span> (乳化脂質/物理消化，不含酵素)。",
+                        "- <strong>胰臟</strong>：分泌胰液，含多種酵素 (可分解醣、蛋、脂)。"
+                    ]
+                },
+                { 
+                    title: "4. 排泄系統 (含氮廢物)", 
+                    details: [
+                        "<strong>廢物來源</strong>：蛋白質代謝產生<span class='highlight'>氨</span> (毒性強)。",
+                        "<strong>處理流程</strong>：氨 &rarr; <span class='font-bold'>肝臟</span> (轉化為尿素/毒性弱) &rarr; <span class='font-bold'>腎臟</span> (過濾血液形成尿液)。",
+                        "<strong>泌尿路徑</strong>：腎臟 &rarr; 輸尿管 &rarr; 膀胱 (儲存) &rarr; 尿道 (排出)。"
+                    ]
+                }
+            ],
+            geography: [
+                { 
+                    title: "1. 臺灣的地形特色 (Landforms)", 
+                    details: [
+                        "<strong>五大地形</strong>：山地(面積最大/約佔2/3)、丘陵、台地、盆地、平原。",
+                        "<strong>中央山脈</strong>：縱貫南北，為分水嶺，導致河川東西分流。",
+                        "<strong>平原</strong>：多由河川沖積而成，西部主要為平原（嘉南平原最大）。",
+                        "<strong>盆地</strong>：臺北盆地（昔為臺北湖，淤積而成）、臺中盆地、埔里盆地。",
+                        "<strong>關鍵經緯</strong>：北回歸線 (23.5°N) 通過嘉義水上與花蓮豐濱，區分熱帶與副熱帶氣候。"
+                    ]
+                },
+                { 
+                    title: "2. 海岸類型的比較", 
+                    details: [
+                        "<strong>北部 (岬灣海岸)</strong>：岩層軟硬相間，海岸曲折，多天然良港 (如基隆港)。",
+                        "<strong>西部 (沙岸)</strong>：河川堆積盛，海岸平直，多沙灘、沙洲、潟湖。優點：適合養殖漁業、鹽田。缺點：港口少。",
+                        "<strong>南部 (珊瑚礁海岸)</strong>：恆春半島，熱帶氣候，裙礁地形。",
+                        "<strong>東部 (斷層海岸)</strong>：板塊擠壓，斷層逼近海岸，海岸陡峭平直，水深，少腹地。"
+                    ]
+                },
+                { 
+                    title: "3. 天氣與水文特徵", 
+                    details: [
+                        "<strong>季風氣候</strong>：夏季吹西南季風 (南部多雨)；冬季吹東北季風 (北部/東北部多雨，因地形雨)。",
+                        "<strong>特殊天氣</strong>：梅雨 (5-6月滯留鋒)、颱風 (夏秋之際)、寒害 (冬季強烈大陸冷氣團)。",
+                        "<strong>河川特性</strong>：<span class='highlight'>坡陡流急</span> (山高水急)、含沙量大 (地質鬆軟)、流量變化大 (荒溪型河川)。",
+                        "<strong>主要河川</strong>：濁水溪 (全臺最長)、高屏溪 (流域面積最大)、淡水河 (流量最穩，因基隆河與大漢溪匯流)。"
+                    ]
+                }
+            ],
+            history: [
+                { 
+                    title: "1. 史前文化 (Prehistoric Taiwan)", 
+                    details: [
+                        "<strong>舊石器時代</strong>：<span class='keyword'>長濱文化</span> (臺東八仙洞)。已知用火，打製石器，採集漁獵，無農業。",
+                        "<strong>新石器時代</strong>：磨製石器，<span class='highlight'>燒製陶器</span>，出現農業。",
+                        "- 早期：<span class='keyword'>大坌坑文化</span> (粗繩紋陶)。",
+                        "- 中晚期：圓山文化 (貝塚/臺北湖)、卑南文化 (石板棺/玉器)。",
+                        "<strong>金屬器時代</strong>：<span class='keyword'>十三行文化</span> (新北八里)。使用鐵器 (煉鐵作坊)，與外地貿易 (發現瑪瑙珠、玻璃、銅錢)。"
+                    ]
+                },
+                { 
+                    title: "2. 大航海時代 (Age of Discovery)", 
+                    details: [
+                        "<strong>荷蘭 (1624-1662)</strong>：佔領南部 (大員/臺南)。建立熱蘭遮城 (行政)、普羅民遮城。轉運站貿易 (絲、銀、香料)。出口：蔗糖、鹿皮。引進黃牛、豌豆。",
+                        "<strong>西班牙 (1626-1642)</strong>：佔領北部 (雞籠/淡水)。建立聖薩爾瓦多城、聖多明哥城。目的：傳教 (天主教)、貿易。後被荷蘭趕走。",
+                        "<strong>郭懷一事件 (1652)</strong>：漢人因不滿荷蘭人重稅與壓迫而起義，為荷治時期最大規模反抗。"
+                    ]
+                }
+            ],
+            civics: [
+                { 
+                    title: "1. 社會規範 (Social Norms)", 
+                    details: [
+                        "<strong>風俗習慣</strong>：長期累積的生活慣例 (如過年圍爐、中元普渡)。約束力：社會輿論。",
+                        "<strong>倫理道德</strong>：評斷是非善惡的標準 (如讓座、孝順、誠實)。約束力：良心譴責。",
+                        "<strong>宗教信仰</strong>：對超自然力量的崇拜 (如不吃豬肉、受戒)。約束力：教規/因果報應。",
+                        "<strong>法律</strong>：由國家制定。特徵：<span class='highlight'>具有國家強制力</span>。違反受刑罰或行政罰 (最嚴厲的處罰)。"
+                    ]
+                },
+                { 
+                    title: "2. 團體的分類 (Social Groups)", 
+                    details: [
+                        "<strong>血緣團體</strong>：基於血緣或婚姻關係。例：家庭、宗親會。",
+                        "<strong>地緣團體</strong>：基於居住地域關係。例：社區管委會、同鄉會、鄰里。",
+                        "<strong>業緣團體</strong>：基於工作職業關係。例：工會、醫師公會、商業同業公會。",
+                        "<strong>趣緣團體</strong>：基於共同興趣或理想。例：登山社、動漫研究社、讀書會、慈濟功德會。"
+                    ]
+                }
+            ],
+            english: [
+                {
+                    title: "1. 名詞複數變化規則 (Plural Nouns)",
+                    details: [
+                        "<strong>規則變化</strong>：",
+                        "1. 一般情況：字尾加 s (dog &rarr; dogs, book &rarr; books)。",
+                        "2. 字尾 s, x, ch, sh：加 es (bus &rarr; buses, box &rarr; boxes, watch &rarr; watches)。",
+                        "3. 子音 + y：去 y 加 ies (baby &rarr; babies, city &rarr; cities)。(注意：母音+y 直接加 s，如 boys)。",
+                        "4. 字尾 f, fe：去 f, fe 加 ves (wife &rarr; wives, leaf &rarr; leaves)。",
+                        "<strong>不規則變化 (必背)</strong>：man &rarr; men, woman &rarr; women, child &rarr; children, foot &rarr; feet, tooth &rarr; teeth, mouse &rarr; mice。"
+                    ]
+                },
+                {
+                    title: "2. 現在進行式 (Present Continuous)",
+                    details: [
+                        "<strong>句型結構</strong>：主詞 + Be動詞 (am/is/are) + <span class='highlight'>V-ing</span> (現在分詞) ...",
+                        "<strong>動詞 V-ing 變化規則</strong>：",
+                        "1. 一般動詞：字尾加 ing (read &rarr; reading, play &rarr; playing)。",
+                        "2. 字尾有 e：去 e 加 ing (dance &rarr; dancing, write &rarr; writing)。",
+                        "3. 短母音 + 單子音：<span class='highlight'>重複字尾</span> 加 ing (run &rarr; running, swim &rarr; swimming, sit &rarr; sitting)。"
+                    ]
+                },
+                {
+                    title: "3. 時態比較 (Tense Comparison)",
+                    details: [
+                        "<strong>現在簡單式</strong>：表示事實、真理或習慣。關鍵字：every day, usually. (例：He plays tennis every Sunday.)",
+                        "<strong>現在進行式</strong>：表示「正在」發生的動作。關鍵字：now, look!, listen!. (例：He is playing tennis now.)"
+                    ]
+                }
+            ],
+            chinese: [
+                { 
+                    title: "L4 論語選 (The Analects)", 
+                    details: [
+                        "<strong>學而時習之</strong>：學習並時常溫習。強調學習的樂趣 (不亦說乎)。",
+                        "<strong>有朋自遠方來</strong>：強調志同道合的朋友相聚之樂。",
+                        "<strong>人不知而不慍</strong>：君子修養，不因沒沒無聞而生氣。",
+                        "<strong>三人行必有我師</strong>：隨時隨地向人學習（擇其善者而從之，其不善者而改之）。"
+                    ]
+                },
+                { 
+                    title: "L5 背影 (朱自清)", 
+                    details: [
+                        "<strong>主旨</strong>：藉由父親在浦口車站送別的過程，刻畫深沉的父愛。",
+                        "<strong>關鍵意象</strong>：<br>- <strong>紫毛大衣/朱紅橘子</strong>：色彩對比，象徵父愛的溫暖。<br>- <strong>攀、縮、傾</strong>：具體動作描寫，表現父親行動不便仍為子奔波的艱辛。",
+                        "<strong>結構</strong>：開頭點題(不忘背影) &rarr; 買橘子(高潮) &rarr; 讀信結尾(再現背影/首尾呼應)。"
+                    ]
+                },
+                { 
+                    title: "L6 心囚 (劉俠/杏林子)", 
+                    details: [
+                        "<strong>主旨</strong>：真正的囚禁不是有形的牢獄，而是內心的枷鎖（成見、慾望、仇恨）。",
+                        "<strong>對比</strong>：身體的殘缺 vs 心靈的自由。",
+                        "<strong>啟示</strong>：心靈的自由取決於自己的轉念，要打破心中的牢籠。"
+                    ]
+                },
+                { 
+                    title: "語文常識一 & 自學二", 
+                    details: [
+                        "<strong>標點符號</strong>：<br>- <strong>分號 (；)</strong>：用於分開複句中並列的句子。<br>- <strong>冒號 (：)</strong>：總起下文或舉例。",
+                        "<strong>自學二：貪睡的長頸鹿</strong>：<br>- 長頸鹿睡眠少是為了生存（避開天敵）。<br>- 啟示：人要有自知之明，認清環境與自身條件，才能生存。"
+                    ]
+                }
+            ]
+        };
+
+        // --- REAL QUESTION BANK (V8/V9: ~25 Qs per subject) ---
+        const qDB = {
+            math: [{q:"計算 \\( (-2)^3 \\times 5 + 12 \\)",a:["-28","-20","52","-8"],c:0,r:"\\( -8 \\times 5 = -40 \\), \\( -40+12=-28 \\)"},{q:"\\( 3^0 + 3^1 + 3^2 \\)",a:["12","13","9","15"],c:1,r:"\\( 1+3+9=13 \\)"},{q:"\\( 10^{-3} \\) 等於？",a:["0.001","0.003","-1000","-0.001"],c:0,r:"千分之一"},{q:"\\( (2^3)^2 \\)",a:["\\( 2^5 \\)","\\( 2^6 \\)","\\( 2^9 \\)","\\( 6^2 \\)"],c:1,r:"指數相乘"},{q:"科學記號 \\( 3.5 \\times 10^{-4} \\) 小數點後第幾位不為0？",a:["3","4","5","6"],c:1,r:"負4次方"},{q:"計算 \\( -| -5 | + 3 \\)",a:["8","-2","2","-8"],c:1,r:"\\( -5+3=-2 \\)"},{q:"若 \\( a = 2^3 \\times 3 \\), \\( b = 2^2 \\times 3^2 \\)，比較大小？",a:["\\( a>b \\)","\\( a<b \\)","\\( a=b \\)","無法比較"],c:1,r:"\\( a=24, b=36 \\)"},{q:"\\( (-1)^{100} + (-1)^{101} \\) 之值？",a:["0","1","-1","2"],c:0,r:"\\( 1 + (-1) = 0 \\)"},{q:"比 -8 大且比 5 小的整數有幾個？",a:["11","12","13","14"],c:1,r:"\\( 5 - (-8) - 1 = 12 \\)"},{q:"計算 \\( 12 - 4 \\times [ 5 - (-3) ] \\)",a:["-20","-12","64","44"],c:0,r:"\\( 12 - 4 \\times 8 = 12 - 32 = -20 \\)"}],
+            biology: [{q:"酵素的主要成分？",a:["澱粉","蛋白質","脂質","維生素"],c:1,r:"蛋白質"},{q:"酵素具有何種特性？",a:["廣泛性","專一性","一次性","不穩定"],c:1,r:"一種酵素只能催化一種反應"},{q:"唾液澱粉酶在胃中會失去活性，是因為？",a:["溫度太高","酸鹼度改變","受質用完","水分太少"],c:1,r:"胃是強酸性，唾液澱粉酶適合中性"},{q:"木質部的主要功能是？",a:["運輸養分","運輸水分","進行光合作用","保護植物"],c:1,r:"木質部運輸水分與礦物質"},{q:"韌皮部的運輸方向？",a:["由下往上","由上往下","雙向","不一定"],c:2,r:"韌皮部可雙向運輸養分"},{q:"人體最大的消化腺是？",a:["胃","肝臟","胰臟","小腸"],c:1,r:"肝臟是最大的消化腺"},{q:"膽汁的功能是？",a:["分解蛋白質","分解澱粉","乳化脂質","吸收水分"],c:2,r:"物理性消化，將大油滴變小油滴"},{q:"蛋白質在何處開始被分解？",a:["口腔","胃","小腸","大腸"],c:1,r:"胃蛋白酶初步分解蛋白質"},{q:"主要的吸收器官是？",a:["胃","小腸","大腸","食道"],c:1,r:"小腸絨毛吸收大部分養分"},{q:"氨轉化為尿素是在哪裡進行？",a:["腎臟","肝臟","膀胱","血液"],c:1,r:"肝臟進行解毒作用"}],
+            geography: [{q:"台灣地形以何者面積最大？",a:["平原","丘陵","山地","台地"],c:2,r:"山地佔2/3"},{q:"北回歸線通過台灣哪裡？",a:["台北","台中","嘉義","屏東"],c:2,r:"嘉義水上"},{q:"台灣位於哪兩個板塊交界？",a:["歐亞/太平洋","歐亞/菲律賓海","太平洋/菲律賓海","歐亞/印度洋"],c:1,r:"歐亞與菲律賓海板塊"},{q:"台灣最長的河川？",a:["高屏溪","淡水河","濁水溪","曾文溪"],c:2,r:"濁水溪"},{q:"台灣流域面積最大的河川？",a:["高屏溪","淡水河","濁水溪","大甲溪"],c:0,r:"高屏溪"},{q:"流量最穩定的河川？",a:["淡水河","濁水溪","高屏溪","秀姑巒溪"],c:0,r:"位於北部，雨量平均"},{q:"台灣河川的主要特色？",a:["長而平緩","短而流急","含沙量少","流量穩定"],c:1,r:"坡陡流急"},{q:"北部海岸屬於？",a:["沙岸","岩岸(岬灣)","珊瑚礁","斷層"],c:1,r:"岬灣海岸，多良港"},{q:"西部海岸特色？",a:["水深","多沙灘潟湖","岩石崢嶸","斷層逼近"],c:1,r:"沙岸，適合養殖"},{q:"東部海岸特色？",a:["平直陡峭","曲折多灣","沙灘寬廣","珊瑚礁發達"],c:0,r:"斷層海岸"}],
+            history: [{q:"臺灣已知最早的舊石器文化？",a:["長濱","大坌坑","圓山","十三行"],c:0,r:"長濱文化(台東)是最早"},{q:"長濱文化的主要特徵？",a:["使用陶器","使用鐵器","打製石器","種植水稻"],c:2,r:"舊石器時代特徵是打製石器"},{q:"新石器時代早期的代表？",a:["大坌坑","圓山","卑南","麒麟"],c:0,r:"大坌坑(粗繩紋陶)"},{q:"圓山文化發現了什麼證明曾有大湖泊？",a:["貝塚","石板棺","煉鐵爐","玉器"],c:0,r:"台北湖時期的貝塚"},{q:"十三行文化屬於哪個時代？",a:["舊石器","新石器","金屬器","現代"],c:2,r:"發現煉鐵遺跡"},{q:"荷蘭人在台灣南部的據點？",a:["熱蘭遮城","聖薩爾瓦多城","紅毛城","台北城"],c:0,r:"今台南安平古堡"},{q:"西班牙人主要佔領台灣哪裡？",a:["南部","北部","東部","中部"],c:1,r:"基隆與淡水"},{q:"郭懷一事件是反抗誰？",a:["西班牙","荷蘭","鄭成功","清朝"],c:1,r:"反抗荷蘭人的重稅"},{q:"荷蘭人主要的輸出品？",a:["茶葉","樟腦","蔗糖","鴉片"],c:2,r:"糖與鹿皮"},{q:"鄭成功攻台是為了？",a:["反清復明","拓展貿易","殖民台灣","躲避戰亂"],c:0,r:"作為反清復明的基地"}],
+            civics: [{q:"具有國家強制力的規範？",a:["道德","風俗","宗教","法律"],c:3,r:"法律由國家制定執行"},{q:"過年發紅包屬於？",a:["法律","風俗習慣","宗教","道德"],c:1,r:"長期的生活慣例"},{q:"讓座給老弱婦孺？",a:["法律","倫理道德","宗教","流行"],c:1,r:"發自內心的善意"},{q:"不吃豬肉(伊斯蘭教)？",a:["法律","風俗","宗教信仰","道德"],c:2,r:"教規約束"},{q:"處罰最嚴厲的規範？",a:["法律","道德","風俗","宗教"],c:0,r:"可剝奪生命、自由、財產"},{q:"家庭屬於何種團體？",a:["血緣","地緣","業緣","趣緣"],c:0,r:"血緣與婚姻"},{q:"社區管委會屬於？",a:["血緣","地緣","業緣","趣緣"],c:1,r:"居住在同一地域"},{q:"工會、商會屬於？",a:["血緣","地緣","業緣","趣緣"],c:2,r:"職業關係"},{q:"登山社、讀書會屬於？",a:["血緣","地緣","業緣","趣緣"],c:3,r:"共同興趣"},{q:"法律的制定機關？",a:["行政院","立法院","司法院","總統府"],c:1,r:"立法院負責立法"}],
+            english: [{q:"I ___ a student.",a:["is","am","are","be"],c:1,r:"I am"},{q:"He ___ my brother.",a:["am","is","are","be"],c:1,r:"He is"},{q:"They ___ happy.",a:["am","is","are","be"],c:2,r:"They are"},{q:"___ you a teacher?",a:["Am","Is","Are","Do"],c:2,r:"Are you...?"},{q:"She ___ (play) tennis every day.",a:["play","plays","playing","played"],c:1,r:"She plays (3rd person singular)"},{q:"We ___ (watch) TV on Sundays.",a:["watch","watches","watching","watched"],c:0,r:"We watch"},{q:"Plural of 'box'?",a:["boxs","boxes","boxies","box"],c:1,r:"Add -es for x ending"},{q:"Plural of 'baby'?",a:["babys","babies","babyes","baby"],c:1,r:"y -> ies"},{q:"Plural of 'man'?",a:["mans","men","manes","man"],c:1,r:"Irregular: men"},{q:"___ he like pizza?",a:["Do","Does","Is","Are"],c:1,r:"Does he...?"}],
+            chinese: [{q:"《論語》的作者？",a:["孔子","孔子弟子與再傳弟子","孟子","老子"],c:1,r:"記錄孔子言行的書"},{q:"「學而時習之，不亦說乎」的「說」通？",a:["悅","曰","越","月"],c:0,r:"通「悅」，高興"},{q:"「人不知而不慍」的「慍」意指？",a:["快樂","生氣","悲傷","害怕"],c:1,r:"生氣、怨恨"},{q:"《背影》中父親買的是？",a:["蘋果","橘子","梨子","香蕉"],c:1,r:"朱紅的橘子"},{q:"「攀、縮、傾」描寫父親？",a:["身體強壯","行動不便","身手矯健","喜歡運動"],c:1,r:"胖子爬月台的艱辛"},{q:"《心囚》主旨？",a:["監獄很可怕","身體健康重要","心靈自由","要遵守法律"],c:2,r:"不被成見慾望囚禁"},{q:"分號(；)用於？",a:["疑問","感嘆","並列分句","引文"],c:2,r:"分開並列的句子"},{q:"《貪睡的長頸鹿》啟示？",a:["要多睡覺","自知之明","要跑得快","要長得高"],c:1,r:"認清自身條件以生存"},{q:"濫竽充數意指？",a:["很有才華","沒有真才實學","樂器很多","喜歡音樂"],c:1,r:"無才混在行家裡"},{q:"明察秋毫意指？",a:["視力差","觀察入微","秋天到了","毫毛很細"],c:1,r:"看清細微事物"}]
+        };
+
+        // --- GLOBAL LOGIC ---
+        let currentSubject = 'city';
+        let quizState = { active: false, questions: [], index: 0, score: 0, hp: 3 };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGame();
+            renderSidebar();
+            updateResourceUI();
+            switchView('city');
+        });
+
+        function loadGame() { const saved = localStorage.getItem('rimuru_save_v9'); if(saved) Object.assign(gameState, JSON.parse(saved)); }
+        function saveGame() { localStorage.setItem('rimuru_save_v9', JSON.stringify(gameState)); updateResourceUI(); }
+        function updateResourceUI() {
+            document.getElementById('res-magic').innerText = gameState.magicules;
+            document.getElementById('res-herb').innerText = gameState.herbs;
+            let lvl = 1;
+            if(gameState.buildings.castle) lvl = 5; else if(gameState.buildings.arena) lvl = 4; else if(gameState.buildings.school) lvl = 3; else if(gameState.buildings.blacksmith) lvl = 2;
+            document.getElementById('res-level').innerText = `Lv.${lvl}`;
+        }
+
+        function shareApp() {
+            const text = "嘿！我正在用這個「坦派斯特建國衝刺班」複習國二段考，裡面有史萊姆遊戲跟詳細筆記，超好用！你也來試試吧！ (請下載 HTML 檔案開啟)";
+            navigator.clipboard.writeText(text).then(() => alert("已複製分享文字！請將此檔案傳給你的朋友。"));
+        }
+
+        function renderSidebar() {
+            document.getElementById('sidebar-subjects').innerHTML = Object.values(studyData).map(s => `<button onclick="switchView('${s.id}')" id="nav-${s.id}" class="nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-sky-50 transition-all"><div class="w-6 text-center"><i class="fa-solid fa-${s.icon}"></i></div>${s.title.split(' ')[0]}</button>`).join('');
+        }
+
+        function switchView(viewId) {
+            currentSubject = viewId;
+            document.querySelectorAll('.nav-item').forEach(el => el.className = `nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 text-slate-500 hover:bg-sky-50 transition-all`);
+            const btn = document.getElementById(`nav-${viewId}`);
+            if(btn) btn.className = `nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 bg-sky-100 text-sky-700 font-bold shadow-sm transition-all`;
+            const container = document.getElementById('main-container');
+            if(viewId === 'city') renderCity(container); else renderSubject(viewId, container);
+        }
+
+        function renderCity(container) {
+            container.innerHTML = `
+                <div class="max-w-5xl mx-auto space-y-8 animate-fade-in">
+                    <div class="glass-panel p-8 rounded-3xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-9xl text-sky-900 rotate-12"><i class="fa-solid fa-crown"></i></div>
+                        <h2 class="text-3xl font-black text-slate-800 mb-2">坦派斯特建設日誌</h2>
+                        <p class="text-slate-600">透過學習獲得魔素，建設你的魔物聯邦！</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${Object.entries(buildingsInfo).map(([key, info]) => {
+                            const built = gameState.buildings[key];
+                            return `<div class="bg-white p-6 rounded-2xl border-2 ${built ? 'border-sky-400 shadow-md' : 'border-slate-100 opacity-70'} flex flex-col items-center text-center transition hover:scale-105"><div class="w-16 h-16 rounded-full ${built ? 'bg-sky-100 text-sky-600' : 'bg-slate-100 text-slate-300'} flex items-center justify-center text-3xl mb-4"><i class="fa-solid fa-${info.icon}"></i></div><h3 class="font-bold text-lg text-slate-800">${info.name}</h3><p class="text-sm text-slate-500 mb-4">${info.desc}</p>${built ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold"><i class="fa-solid fa-check"></i> 已建設</span>` : `<button onclick="build('${key}', ${info.cost})" class="bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-sky-500 ${gameState.magicules < info.cost ? 'opacity-50 cursor-not-allowed' : ''}">建設 (${info.cost} <i class="fa-solid fa-bolt text-yellow-300"></i>)</button>`}</div>`
+                        }).join('')}
+                    </div>
+                </div>`;
+        }
+
+        function build(key, cost) {
+            if(gameState.magicules >= cost) { gameState.magicules -= cost; gameState.buildings[key] = true; saveGame(); renderCity(document.getElementById('main-container')); alert(`建設成功！${buildingsInfo[key].name} 加入了你的城邦！`); } else { alert("魔素不足！快去刷題賺取魔素吧！"); }
+        }
+
+        function renderSubject(id, container) {
+            const data = studyData[id];
+            const notes = notesData[id] || [];
+            container.innerHTML = `
+                <div class="max-w-6xl mx-auto space-y-8 animate-fade-in">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div><h2 class="text-3xl font-black text-slate-800 flex items-center gap-3"><span class="text-${data.color}-500"><i class="fa-solid fa-${data.icon}"></i></span>${data.title}</h2><p class="text-slate-500 mt-1">${data.summary}</p></div>
+                        <button onclick="startQuiz('${id}')" class="bg-gradient-to-r from-${data.color}-500 to-${data.color}-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-${data.color}-200 transition hover:scale-105 flex items-center gap-2"><i class="fa-solid fa-khanda"></i> 討伐此單元</button>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-6">${notes.map(n => `<div class="note-card bg-white rounded-2xl p-6 border border-slate-100 shadow-sm"><h3 class="font-bold text-lg text-${data.color}-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-scroll"></i> ${n.title}</h3><ul class="space-y-3">${n.details.map(d => `<li class="text-slate-600 text-sm pl-4 border-l-2 border-${data.color}-200 leading-relaxed">${d}</li>`).join('')}</ul></div>`).join('')}</div>
+                        <div class="space-y-6"><div class="bg-white rounded-3xl shadow-xl border-4 border-slate-100 overflow-hidden min-h-[400px] flex flex-col"><div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex justify-between items-center"><span class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-gamepad mr-2"></i>互動修煉場</span></div><div class="flex-1 relative bg-slate-50/50 p-4" id="tool-container">${getInteractiveTool(id)}</div></div></div>
+                    </div>
+                </div>`;
+            setTimeout(() => {
+                if(id === 'math') initSlimeClicker();
+                if(id === 'biology') initBioDragDrop();
+                if(id === 'geography') initGeoMap();
+                if(window.MathJax) MathJax.typesetPromise();
+            }, 100);
+        }
+
+        function getInteractiveTool(id) {
+            if(id === 'math') return `<div class="text-center h-full flex flex-col items-center justify-center"><div class="text-sm text-slate-500 mb-4">點擊史萊姆進行指數分裂 ($$2^n$$)</div><div id="slime-container" class="relative w-full h-64 cursor-pointer" onclick="splitSlime()"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200" id="main-slime"><div class="w-24 h-24 bg-sky-400 rounded-full flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-sky-300 animate-bounce select-none">1</div></div></div><div class="mt-4 text-xl font-bold text-indigo-600">數量: <span id="slime-count">1</span> ($$2^0$$)</div><button onclick="resetSlime()" class="mt-4 text-xs text-slate-400 hover:text-red-500">Reset</button></div>`;
+            if(id === 'biology') return `<div class="h-full flex flex-col"><div class="text-xs text-slate-500 mb-2">拖曳器官排列正確消化順序：</div><div id="bio-drop-zone" class="flex-1 border-2 border-dashed border-emerald-200 rounded-xl bg-emerald-50/50 p-4 flex flex-col gap-2 items-center justify-center drop-zone text-sm text-emerald-400 mb-4"><i class="fa-solid fa-arrow-down mb-1"></i> 請按順序拖入此處</div><div id="bio-source" class="flex flex-wrap gap-2 justify-center">${['胃','大腸','食道','小腸','口','肛門'].sort(()=>Math.random()-0.5).map(item => `<div class="draggable-item bg-white px-3 py-1 rounded-full shadow border border-slate-200 text-sm font-bold text-slate-600" draggable="true">${item}</div>`).join('')}</div><button onclick="checkBioOrder()" class="mt-4 w-full bg-emerald-500 text-white rounded-lg py-2 font-bold text-sm">檢查順序</button><div id="bio-result" class="text-center text-xs mt-2 h-4 font-bold"></div></div>`;
+            if(id === 'geography') return `<div class="h-full flex flex-col items-center"><div class="text-xs text-slate-500 mb-2">拖曳標籤至正確區域 (北/中/南/東)：</div><div class="relative w-48 h-64 bg-slate-200 rounded-3xl my-2 flex flex-col border-4 border-white shadow-inner overflow-hidden"><div id="geo-n" class="flex-1 bg-blue-100/50 border-b border-white flex items-center justify-center text-xs text-slate-400 drop-zone" data-zone="n">北</div><div class="flex-1 flex"><div id="geo-w" class="w-2/3 bg-green-100/50 border-r border-white flex items-center justify-center text-xs text-slate-400 drop-zone" data-zone="w">西</div><div id="geo-e" class="w-1/3 bg-yellow-100/50 flex items-center justify-center text-xs text-slate-400 drop-zone" data-zone="e">東</div></div><div id="geo-s" class="flex-1 bg-red-100/50 border-t border-white flex items-center justify-center text-xs text-slate-400 drop-zone" data-zone="s">南</div></div><div id="geo-tags" class="flex flex-wrap gap-2 justify-center mt-2"><div class="draggable-item bg-white px-2 py-1 text-xs border rounded shadow" draggable="true" data-ans="n">盆地/岬灣</div><div class="draggable-item bg-white px-2 py-1 text-xs border rounded shadow" draggable="true" data-ans="w">沙岸/平原</div><div class="draggable-item bg-white px-2 py-1 text-xs border rounded shadow" draggable="true" data-ans="e">斷層/陡峭</div><div class="draggable-item bg-white px-2 py-1 text-xs border rounded shadow" draggable="true" data-ans="s">珊瑚礁/熱帶</div></div><div id="geo-result" class="text-center text-xs mt-2 h-4 font-bold text-sky-600"></div></div>`;
+            return `<div class="h-full flex items-center justify-center text-slate-400 text-sm">此學科暫無互動工具，請進行測驗。</div>`;
+        }
+
+        // --- INTERACTIVE LOGIC ---
+        let slimeStep = 0;
+        function initSlimeClicker() {
+            slimeStep = 0;
+            const c = document.getElementById('slime-container');
+            if(c) {
+                c.innerHTML = `<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200" id="main-slime"><div class="w-24 h-24 bg-sky-400 rounded-full flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-sky-300 animate-bounce select-none">1</div></div>`;
+                document.getElementById('slime-count').innerHTML = `1 ($$2^0$$)`;
+                if(window.MathJax) MathJax.typesetPromise();
+            }
+        }
+        function splitSlime() {
+            if(slimeStep >= 6) return;
+            slimeStep++;
+            const count = Math.pow(2, slimeStep);
+            document.getElementById('slime-count').innerHTML = `${count} ($$2^${slimeStep}$$)`;
+            const c = document.getElementById('slime-container');
+            c.innerHTML = '';
+            for(let i=0; i<count; i++) {
+                const s = document.createElement('div');
+                s.className = "absolute w-8 h-8 bg-sky-400 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm transition-all duration-500 animate-bounce";
+                s.innerText = "1";
+                s.style.top = `${Math.random()*80 + 10}%`; s.style.left = `${Math.random()*80 + 10}%`;
+                c.appendChild(s);
+            }
+            if(window.MathJax) MathJax.typesetPromise();
+        }
+        function resetSlime() { initSlimeClicker(); }
+
+        function initBioDragDrop() {
+            const draggables = document.querySelectorAll('#bio-source .draggable-item');
+            const dropZone = document.getElementById('bio-drop-zone');
+            if(!dropZone) return;
+            draggables.forEach(d => { d.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', e.target.innerText); e.target.classList.add('opacity-50'); }); d.addEventListener('dragend', e => { e.target.classList.remove('opacity-50'); }); });
+            dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+            dropZone.addEventListener('dragleave', e => { dropZone.classList.remove('drag-over'); });
+            dropZone.addEventListener('drop', e => {
+                e.preventDefault(); dropZone.classList.remove('drag-over');
+                const data = e.dataTransfer.getData('text/plain');
+                if(data && dropZone.children.length < 7) { const el = document.createElement('div'); el.className = "bg-white px-3 py-1 rounded shadow text-sm font-bold text-emerald-600 w-full text-center"; el.innerText = data; dropZone.appendChild(el); }
+            });
+        }
+        function checkBioOrder() {
+            const correct = ['口','食道','胃','小腸','大腸','肛門'];
+            const user = Array.from(document.getElementById('bio-drop-zone').children).filter(el => el.tagName === 'DIV').map(el => el.innerText);
+            const res = document.getElementById('bio-result');
+            if(JSON.stringify(user) === JSON.stringify(correct)) { res.innerText = "正確！完美消化！(+10 魔素)"; res.className = "text-center text-xs mt-2 h-4 font-bold text-green-500"; gameState.magicules += 10; updateResourceUI(); } else { res.innerText = "順序錯誤，再試試看！"; res.className = "text-center text-xs mt-2 h-4 font-bold text-red-500"; }
+        }
+
+        function initGeoMap() {
+            const tags = document.querySelectorAll('#geo-tags .draggable-item');
+            const zones = document.querySelectorAll('.drop-zone');
+            tags.forEach(t => { t.addEventListener('dragstart', e => { e.dataTransfer.setData('ans', e.target.dataset.ans); e.target.classList.add('opacity-50'); }); t.addEventListener('dragend', e => e.target.classList.remove('opacity-50')); });
+            zones.forEach(z => { z.addEventListener('dragover', e => e.preventDefault()); z.addEventListener('drop', e => { e.preventDefault(); const ans = e.dataTransfer.getData('ans'); const targetZone = z.dataset.zone; const res = document.getElementById('geo-result'); if(ans === targetZone) { z.style.backgroundColor = '#bbf7d0'; z.innerText = "O"; res.innerText = "配置正確！(+5 魔素)"; gameState.magicules += 5; updateResourceUI(); } else { res.innerText = "位置不對喔..."; } }); });
+        }
+
+        // --- QUIZ SYSTEM ---
+        function openQuizSelector() {
+            document.getElementById('quiz-modal').classList.remove('hidden');
+            document.getElementById('quiz-selector').innerHTML = Object.values(studyData).map(s => `<button onclick="startQuiz('${s.id}')" class="flex flex-col items-center justify-center p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-${s.color}-400 hover:bg-${s.color}-50 transition group"><i class="fa-solid fa-${s.icon} text-3xl text-${s.color}-400 mb-2 group-hover:scale-110 transition"></i><span class="font-bold text-slate-600 text-sm">${s.title.split(' ')[0]}</span></button>`).join('');
+            document.getElementById('quiz-selector').classList.remove('hidden');
+            document.getElementById('quiz-question-view').classList.add('hidden');
+            document.getElementById('quiz-results-view').classList.add('hidden');
+            document.getElementById('quiz-footer').classList.add('hidden');
+        }
+        function closeQuizModal() { document.getElementById('quiz-modal').classList.add('hidden'); }
+        function startQuiz(id) {
+            quizState.active = true; quizState.score = 0; quizState.hp = 3; quizState.index = 0;
+            const allQ = qDB[id] || [];
+            quizState.questions = [...allQ].sort(() => 0.5 - Math.random()).slice(0, 10);
+            document.getElementById('quiz-hp').innerText = quizState.hp;
+            document.getElementById('quiz-selector').classList.add('hidden');
+            document.getElementById('quiz-question-view').classList.remove('hidden');
+            document.getElementById('quiz-footer').classList.remove('hidden');
+            renderQuizQuestion();
+        }
+        function renderQuizQuestion() {
+            const q = quizState.questions[quizState.index];
+            if(!q) { endQuiz(); return; }
+            const pct = (quizState.index / quizState.questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+            document.getElementById('question-card').innerHTML = `<h4 class="text-xl font-bold text-slate-800 mb-6 leading-relaxed">${q.q}</h4><div class="grid gap-3">${q.a.map((opt, i) => `<button onclick="answer(${i})" id="opt-${i}" class="w-full text-left p-4 rounded-xl border-2 border-slate-100 hover:border-sky-400 hover:bg-sky-50 font-bold text-slate-600 transition relative overflow-hidden group"><span class="z-10 relative flex items-center"><span class="w-6 h-6 rounded-full bg-slate-200 text-slate-500 text-xs flex items-center justify-center mr-3">${String.fromCharCode(65+i)}</span>${opt}</span></button>`).join('')}</div><div id="quiz-feedback" class="hidden mt-4 bg-slate-50 p-4 rounded-xl text-sm border border-slate-200"><div class="font-bold mb-1" id="fb-title"></div><div class="text-slate-600">${q.r}</div></div>`;
+            document.getElementById('btn-next').disabled = true; document.getElementById('btn-next').classList.add('opacity-50', 'cursor-not-allowed'); document.getElementById('btn-use-herb').classList.remove('hidden');
+            if(window.MathJax) MathJax.typesetPromise();
+        }
+        function answer(idx) {
+            const q = quizState.questions[quizState.index];
+            const isCorrect = idx === q.c;
+            q.a.forEach((_, i) => document.getElementById(`opt-${i}`).disabled = true);
+            document.getElementById('quiz-feedback').classList.remove('hidden');
+            if(isCorrect) { quizState.score++; document.getElementById(`opt-${idx}`).classList.add('bg-green-100', 'border-green-500', 'text-green-800'); document.getElementById('fb-title').innerHTML = `<span class="text-green-600"><i class="fa-solid fa-check"></i> 正確！</span>`; }
+            else { quizState.hp--; document.getElementById('quiz-hp').innerText = quizState.hp; document.getElementById(`opt-${idx}`).classList.add('bg-red-100', 'border-red-500', 'text-red-800'); document.getElementById(`opt-${q.c}`).classList.add('bg-green-100', 'border-green-500'); document.getElementById('fb-title').innerHTML = `<span class="text-red-500"><i class="fa-solid fa-xmark"></i> 錯誤！</span>`; }
+            document.getElementById('btn-next').disabled = false; document.getElementById('btn-next').classList.remove('opacity-50', 'cursor-not-allowed'); document.getElementById('btn-use-herb').classList.add('hidden');
+            if(quizState.hp <= 0) setTimeout(endQuiz, 1500);
+            if(window.MathJax) MathJax.typesetPromise();
+        }
+        function useHerb() { if(gameState.herbs > 0) { gameState.herbs--; updateResourceUI(); const q = quizState.questions[quizState.index]; document.getElementById(`opt-${q.c}`).classList.add('ring-2', 'ring-green-400'); } else { alert("草藥不足！"); } }
+        function nextQuestion() { quizState.index++; if(quizState.index >= quizState.questions.length) endQuiz(); else renderQuizQuestion(); }
+        function endQuiz() {
+            document.getElementById('quiz-question-view').classList.add('hidden'); document.getElementById('quiz-footer').classList.add('hidden'); document.getElementById('quiz-results-view').classList.remove('hidden');
+            const isWin = quizState.hp > 0;
+            const magicEarned = isWin ? quizState.score * 10 : Math.floor(quizState.score * 2);
+            const herbsEarned = isWin ? Math.floor(quizState.score / 3) : 0;
+            gameState.magicules += magicEarned; gameState.herbs += herbsEarned; saveGame();
+            document.getElementById('result-msg').innerText = isWin ? "討伐大成功！獲得了戰利品。" : "討伐失敗...請重整旗鼓再來。";
+            document.getElementById('reward-magic').innerText = `+${magicEarned}`; document.getElementById('reward-herb').innerText = `+${herbsEarned}`;
+            document.getElementById('result-icon-container').innerHTML = isWin ? `<div class="text-6xl text-yellow-400 animate-bounce"><i class="fa-solid fa-crown"></i></div>` : `<div class="text-6xl text-slate-300"><i class="fa-solid fa-skull"></i></div>`;
+        }
+    </script>
+</body>
+</html>
